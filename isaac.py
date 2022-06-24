@@ -82,7 +82,9 @@ statues.add(draculisa, collector, captain, miranda)
 all_sprites.add(draculisa, collector, captain, miranda)
 
 # Text flashes (unintended effect) as letters appear
-def flashing_text_animation(string):
+def intro_animation(string):
+
+    screen.fill((255, 255, 255))
     
     # Text to be rendered each frame
     text = ''
@@ -90,16 +92,27 @@ def flashing_text_animation(string):
     # Add letter to rendered text and update screen
     for i in string:
         text += i
-        font = pygame.font.SysFont("arial", 32)
+        font = pygame.font.SysFont("arial", 64)
         text_surf = font.render(text, True, (0, 0, 0))
         text_rect = text_surf.get_rect()
-        text_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100)
+        text_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        screen.fill((255, 255, 255))
         screen.blit(text_surf, text_rect)
         pygame.display.update()
         pygame.time.wait(50)
         text_surf.fill((255, 255, 255))
         screen.blit(text_surf, text_rect)
         pygame.display.update()
+    
+    # Show final text and pause
+    font = pygame.font.SysFont("arial", 64)
+    text_surf = font.render(text, True, (0, 0, 0))
+    text_rect = text_surf.get_rect()
+    text_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+    screen.fill((255, 255, 255))
+    screen.blit(text_surf, text_rect)
+    pygame.display.update()
+    pygame.time.wait(1000)
 
 # Sliding surface moves to the right, revealing text underneath
 def uncover_text_animation(string): 
@@ -133,6 +146,9 @@ def uncover_text_animation(string):
     # Pause after the quote is loaded
     if (sliding_rect.left >= text_rect.right):
         pygame.time.wait(500)
+
+# Intro
+intro_animation("Isaac's Castle of Memories")
 
 # Game Loop
 running = True
