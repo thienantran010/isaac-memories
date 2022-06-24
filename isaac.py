@@ -4,8 +4,8 @@ from pygame.locals import (RLEACCEL, K_UP, K_DOWN, K_LEFT, K_RIGHT, K_ESCAPE, KE
 pygame.init()
 
 # Setting up window of game
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 800
+SCREEN_WIDTH = 1900
+SCREEN_HEIGHT = 950
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Isaac's Castle of Memories")
 
@@ -16,7 +16,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.surf = pygame.Surface((50, 50))
         self.surf.fill((0, 0, 0))
-        self.rect = self.surf.get_rect(center=(400, 600))
+        self.rect = self.surf.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100))
     
     # Move player based on pressed key
     def update(self, pressed_keys):
@@ -39,14 +39,18 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom > SCREEN_HEIGHT:
             self.rect.bottom = SCREEN_HEIGHT
 
+# Statue sprite
 class Statue(pygame.sprite.Sprite):
 
-    def __init__(self, image_name, position, char_name):
+    def __init__(self, image_name, position, message):
         super().__init__()
         raw_img = pygame.image.load(f"images/{image_name}")
         self.surf = pygame.transform.scale(raw_img, (100, 150))
         self.rect = self.surf.get_rect(center=position)
-        self.identity = char_name
+        self.message = message
+
+    def show_message(self):
+        uncover_text_animation(self.message)
 
 # Sprite Groups
 # all_sprites is for rendering
@@ -57,11 +61,17 @@ statues = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 
+# Statue position calculations
+statue1_x = SCREEN_WIDTH * 0.25 * 0.5
+statue2_x = SCREEN_WIDTH * 0.5 - statue1_x
+statue3_x = SCREEN_WIDTH * 0.75 -  statue1_x
+statue4_x = SCREEN_WIDTH - statue1_x
+
 # Instantiate statues and add it to all_sprites and statues
-draculisa = Statue("drac-and-lisa.webp", (100, 100), "draculisa")
-collector = Statue("collector.png", (300, 100), "collector")
-captain = Statue("captain.webp", (500, 100), "captain")
-miranda = Statue("miranda.webp", (700, 100), "miranda")
+draculisa = Statue("drac-and-lisa.webp", (statue1_x, 100), "My master and his wife. May they rest in peace.")
+collector = Statue("collector.png", (statue2_x, 100), "\"I have a feeling you haven't received many gifts in your life, and it pleases me to improve that balance.\"")
+captain = Statue("captain.webp", (statue3_x, 100), "\"It's a cruel world. Maybe we do all deserve to die. But maybe we could be better, too.\"")
+miranda = Statue("miranda.webp", (statue4_x, 100), "\"There are worse things in the world than vampires in Styria, Isaac. There are worse things... than betrayal.\"")
 
 draculisa.surf.set_colorkey((28, 28, 28), RLEACCEL)
 collector.surf.set_colorkey((255, 255, 255), RLEACCEL)
@@ -71,9 +81,13 @@ miranda.surf.set_colorkey((255, 255, 255), RLEACCEL)
 statues.add(draculisa, collector, captain, miranda)
 all_sprites.add(draculisa, collector, captain, miranda)
 
+# Text flashes (unintended effect) as letters appear
 def flashing_text_animation(string):
-
+    
+    # Text to be rendered each frame
     text = ''
+
+    # Add letter to rendered text and update screen
     for i in string:
         text += i
         font = pygame.font.SysFont("arial", 32)
@@ -87,7 +101,7 @@ def flashing_text_animation(string):
         screen.blit(text_surf, text_rect)
         pygame.display.update()
 
-# Text box animation
+# Sliding surface moves to the right, revealing text underneath
 def uncover_text_animation(string): 
 
     # Render string
@@ -96,6 +110,7 @@ def uncover_text_animation(string):
     text_rect = text_surf.get_rect()
     text_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100)
 
+    # Position the surfaces
     sliding_surf = pygame.Surface((text_rect.width, text_rect.height))
     white_surf = pygame.Surface((text_rect.width, text_rect.height))
     white_surf.fill((255, 255, 255))
@@ -106,13 +121,18 @@ def uncover_text_animation(string):
 
     pygame.display.update()
 
+    # Move the sliding surface
     while (sliding_rect.left < text_rect.right):
         screen.blit(white_surf, sliding_rect)
         screen.blit(text_surf, text_rect)
         sliding_rect.move_ip(5, 0)
         screen.blit(sliding_surf, sliding_rect)
         pygame.display.update()
-        pygame.time.wait(50)
+        pygame.time.wait(10)
+    
+    # Pause after the quote is loaded
+    if (sliding_rect.left >= text_rect.right):
+        pygame.time.wait(500)
 
 # Game Loop
 running = True
@@ -133,8 +153,8 @@ while running:
         # Update player position
         pressed_keys = pygame.key.get_pressed()
         player.update(pressed_keys)
-    else:
-        uncover_text_animation("Dracula!")
+    elif isinstance(collided_statue, Statue):
+        collided_statue.show_message()
         player.rect.move_ip(0, 10)
 
     # Render background
